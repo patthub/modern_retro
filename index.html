@@ -30,17 +30,18 @@
   .chip { border:1px solid var(--line); border-radius:999px; padding:0 7px; }
   mark { border-radius:3px; padding:0 2px; color:inherit; background:color-mix(in srgb, var(--c) 28%, transparent); box-shadow: inset 0 -2px 0 var(--c); }
   mark::after { content: attr(data-l); font-size:10px; color:var(--c); margin-left:3px; vertical-align: super; }
+  a { color:var(--accent); }
   .pager { display:flex; gap:8px; align-items:center; justify-content:center; margin:16px 0 40px; }
 </style>
 </head>
 <body>
 <header>
   <h1>Retrokonwersja „Polskiej Bibliografii Literackiej” – wyniki parsowania</h1>
-  <p>Rekordy bibliograficzne z rozpoznanymi elementami opisu. Kliknij etykietę, aby pokazać tylko rekordy, które ją zawierają.</p>
+  <p>Rekordy bibliograficzne z rozpoznanymi elementami opisu. Kliknij etykietę, aby pokazać tylko rekordy, które ją zawierają. <a href="wyniki.html">Wyniki ewaluacji GLiNER →</a></p>
 </header>
 <main>
   <div class="controls">
-    <label>Rocznik <select id="year"></select></label>
+    <label>Zbiór <select id="year"></select></label>
     <input type="search" id="q" placeholder="Szukaj w rekordach…">
     <label><input type="checkbox" id="empty"> tylko bez rozpoznanych elementów</label>
   </div>
@@ -53,6 +54,11 @@
 </main>
 <script>
 const PAGE = 50;
+const NAMES = {
+  'gliner-test-200': 'GLiNER – predykcje na zbiorze testowym (200)',
+  'adnotacje-test-200': 'Adnotacje – zbiór testowy (200)',
+  'adnotacje-trening-1830': 'Adnotacje – zbiór treningowy (1830)',
+};
 const COLORS = ['#d64545','#3b82c4','#2e9e5b','#c99a12','#9b59b6','#16a3a3','#e07b39','#7f8c9a','#c2185b','#6d6dd6','#7fa832','#a0522d'];
 const $ = id => document.getElementById(id);
 let data = null, active = new Set(), filtered = [], page = 0;
@@ -118,7 +124,7 @@ $('next').onclick = () => { page++; render(); scrollTo(0, 0); };
 $('year').onchange = () => load($('year').value);
 
 fetch('data/index.json').then(r => r.json()).then(years => {
-  $('year').innerHTML = years.map(y => `<option>${esc(y)}</option>`).join('');
+  $('year').innerHTML = years.map(y => `<option value="${esc(y)}">${esc(NAMES[y] || y + ' – spaCy + reguły')}</option>`).join('');
   const start = decodeURIComponent(location.hash.slice(1));
   if (years.includes(start)) $('year').value = start;
   load($('year').value);

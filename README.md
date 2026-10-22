@@ -11,4 +11,4 @@ z plików CSV zwracanych przez `apply_ner_to_dataframe`:
 
     python eksport.py wyniki/*.csv   # zapisuje data/<rocznik>.json i data/index.json
 
-Obecne dane: podejście hybrydowe (model spaCy + reguły).
+Obecne dane: roczniki – podejście hybrydowe (model spaCy + reguły); zbiory adnotacji (trening 1830, test 200) i predykcje GLiNER na zbiorze testowym. Ewaluacja GLiNER vs spaCy: `wyniki.html`.

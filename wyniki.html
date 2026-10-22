@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GLiNER a spaCy</title>
+<style>
+  :root { --bg:#fbfaf7; --fg:#1d1d1b; --muted:#6b6a65; --line:#e3e1da; --card:#fff; --accent:#8a3b12; --up:#2e7d4f; --down:#b3402f; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#181816; --fg:#ecebe6; --muted:#9a998f; --line:#33322e; --card:#22221f; --accent:#e39b6b; --up:#6cc28f; --down:#ec8a7a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 28px 16px 48px; }
+  h1 { font: 600 22px/1.2 Georgia, serif; margin: 0 0 6px; }
+  h2 { font: 600 17px/1.3 Georgia, serif; margin: 32px 0 8px; }
+  a { color: var(--accent); }
+  .muted { color: var(--muted); }
+  .kpis { display:flex; flex-wrap:wrap; gap:12px; margin:20px 0; }
+  .kpi { flex:1 1 180px; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px 14px; }
+  .kpi b { display:block; font-size:26px; font-variant-numeric: tabular-nums; }
+  .kpi span { font-size:13px; color:var(--muted); }
+  .wrap { overflow-x:auto; }
+  table { border-collapse: collapse; width:100%; background:var(--card); border:1px solid var(--line); border-radius:8px; font-variant-numeric: tabular-nums; }
+  th, td { padding:7px 10px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; }
+  th:first-child, td:first-child { text-align:left; white-space:normal; }
+  th { font-size:13px; color:var(--muted); font-weight:600; }
+  tfoot td { font-weight:600; border-bottom:0; }
+  .up { color:var(--up); } .down { color:var(--down); }
+  ul { padding-left: 20px; }
+</style>
+</head>
+<body>
+<main>
+  <p><a href="./">← Przeglądarka rekordów</a></p>
+  <h1>GLiNER a spaCy: parsowanie rekordów PBL</h1>
+  <p class="muted">Model <code>urchade/gliner_multi-v2.1</code> dostrojony na 1830 rekordach z roczników 1948, 1954–55, 1959 i 1968
+    (10 epok, próg 0,5), oceniany na 200 rekordach (po 50 z rocznika). Wynik spaCy z Tab. 10 rozprawy.
+    Miara: dokładne dopasowanie granic elementu.</p>
+
+  <div class="kpis">
+    <div class="kpi"><b>75,61%</b><span>średnie F1 – GLiNER</span></div>
+    <div class="kpi"><b>85,24%</b><span>średnie F1 – spaCy (Tab. 10)</span></div>
+    <div class="kpi"><b>81,9%</b><span>GLiNER bez rodzaju dzieła zależnego</span></div>
+  </div>
+
+  <h2>Wyniki według elementów opisu</h2>
+  <div class="wrap">
+  <table>
+    <thead><tr><th>Element opisu</th><th>P</th><th>R</th><th>F1 GLiNER</th><th>F1 spaCy</th><th>Różnica</th><th>n test</th></tr></thead>
+    <tbody id="t"></tbody>
+    <tfoot><tr><td>Średnia F1</td><td></td><td></td><td>75,61</td><td>85,24</td><td class="down">−9,63</td><td>817</td></tr></tfoot>
+  </table>
+  </div>
+
+  <h2>Wnioski</h2>
+  <ul>
+    <li>GLiNER wyraźnie poprawia elementy zależne od kontekstu: <b>tytuł (+20)</b>, autor (+10), numerację źródła (+10).</li>
+    <li>Słabiej wypadają krótkie, schematyczne elementy (numer wydania, opis fizyczny, data), w systemie hybrydowym obsługiwane głównie przez reguły; część różnic to mała próba (12–16 przykładów).</li>
+    <li>Rodzaj dzieła zależnego: tylko 62 przykłady treningowe i 4 testowe – model ich nie nauczył się.</li>
+    <li>Adnotacja: długie, często urwane przez OCR fragmenty w nawiasach; niejednolite granice w adnotacjach.</li>
+    <li>Próg pewności: 0,3 → 72,7%, <b>0,5 → 75,6%</b>, 0,6 → 75,4%, 0,7 → 74,8%, 0,8 → 69,7%.</li>
+  </ul>
+
+  <h2>Zastrzeżenia</h2>
+  <ul>
+    <li>Zbiory treningowy i testowy zostały oznaczone automatycznie (LLM) według zatwierdzonych wytycznych i <b>czekają na ręczną weryfikację</b>.</li>
+    <li>Zbiór testowy różni się od użytego w rozprawie, więc porównanie jest orientacyjne.</li>
+  </ul>
+  <p>Predykcje i adnotacje można przejrzeć w <a href="./#gliner-test-200">przeglądarce rekordów</a>
+    (zbiory „GLiNER – predykcje”, „Adnotacje – …”; rekordy różniące się od adnotacji są oznaczone).</p>
+</main>
+<script>
+const R = [
+  ['Tytuł', 81.33, 81.82, 81.57, 61.54, 165],
+  ['Autor', 87.36, 87.36, 87.36, 77.60, 87],
+  ['Numeracja źródła', 96.80, 85.82, 90.98, 80.56, 141],
+  ['Miejsce wydania', 92.50, 97.37, 94.87, 90.00, 38],
+  ['Współautor', 66.67, 92.00, 77.31, 73.45, 50],
+  ['Oznaczenie rodzaju współpracy', 80.43, 86.05, 83.15, 80.18, 43],
+  ['Źródło bibliograficzne (czasopismo)', 90.60, 82.17, 86.18, 92.16, 129],
+  ['Data wydania', 81.25, 81.25, 81.25, 90.91, 16],
+  ['Wydawnictwo', 72.97, 90.00, 80.60, 90.91, 30],
+  ['Opis fizyczny', 73.33, 94.29, 82.50, 95.12, 35],
+  ['Numer wydania', 71.43, 83.33, 76.92, 97.18, 12],
+  ['Adnotacja', 59.42, 61.19, 60.29, 94.59, 67],
+  ['Rodzaj dzieła zależnego', 0, 0, 0, 84.00, 4],
+];
+const f = x => x.toLocaleString('pl', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+document.getElementById('t').innerHTML = R.map(([l, p, r, g, s, n]) => {
+  const d = g - s;
+  return `<tr><td>${l}</td><td>${f(p)}</td><td>${f(r)}</td><td><b>${f(g)}</b></td><td>${f(s)}</td>` +
+    `<td class="${d >= 0 ? 'up' : 'down'}">${d >= 0 ? '+' : '−'}${f(Math.abs(d))}</td><td>${n}</td></tr>`;
+}).join('');
+</script>
+</body>
+</html>
